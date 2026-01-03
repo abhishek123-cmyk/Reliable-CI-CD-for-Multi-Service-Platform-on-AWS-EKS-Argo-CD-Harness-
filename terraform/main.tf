@@ -3,7 +3,8 @@ provider "aws" {
 }
 
 module "vpc" {
-  source = "../../modules/vpc"
+  source = "../Terraform/modules/vpc"
+
 
   vpc_name = "dev-vpc"
   cidr     = "10.0.0.0/16"
@@ -14,7 +15,8 @@ module "vpc" {
 }
 
 module "eks" {
-  source = "../../modules/eks"
+  source = "../Terraform/modules/eks"
+}
 
   cluster_name    = "dev-eks"
   vpc_id          = module.vpc.vpc_id
@@ -22,7 +24,8 @@ module "eks" {
 }
 
 module "ecr" {
-  source = "../../modules/ecr"
+  source = "../Terraform/modules/ecr"
+}
 
   repositories = [
     "user-service",
