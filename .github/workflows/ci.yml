@@ -1,20 +1,25 @@
-name: CI - Build Scan Push
+name: Terraform EC2 Deploy
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  build:
+  ec2:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      id-token: write
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.6
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -22,23 +27,10 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Debug identity
+        run: aws sts get-caller-identity
 
-      - name: Build Docker image
-        run: |
-          docker build -t user-service:${{ github.sha }} ./services/user
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
 
-      - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: user-service:${{ github.sha }}
-          severity: CRITICAL,HIGH
-
-      - name: Tag & Push image
-        run: |
-          docker tag user-service:${{ github.sha }} \
-            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/user-service:${{ github.sha }}
-
-          docker push \
-            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/user-service:${{ github.sha }}
