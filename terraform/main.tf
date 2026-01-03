@@ -20,3 +20,15 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
 }
+module "ecr" {
+  source = "../../modules/ecr"
+
+  repositories = [
+    "user-service",
+    "order-service",
+    "payment-service",
+    "inventory-service",
+    "notification-service",
+    "gateway-service"
+  ]
+}
