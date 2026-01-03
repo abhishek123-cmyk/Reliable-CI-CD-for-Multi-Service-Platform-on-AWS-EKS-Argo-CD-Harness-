@@ -6,11 +6,6 @@ on:
     branches:
       - main
 
-# 🚨 THIS IS REQUIRED FOR OIDC
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   ec2:
     runs-on: ubuntu-latest
