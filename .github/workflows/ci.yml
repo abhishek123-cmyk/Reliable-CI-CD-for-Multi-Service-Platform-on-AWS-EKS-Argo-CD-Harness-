@@ -26,16 +26,17 @@ jobs:
           aws-region: us-east-1
 
       - name: Terraform Init
-        working-directory: terraform
+        working-directory: ec2-creation-in-us-east-1
         run: terraform init
 
       - name: Terraform Plan
-        working-directory: terraform
+        working-directory: ec2-creation-in-us-east-1
         run: terraform plan
 
       - name: Terraform Apply
-        working-directory: terraform
+        working-directory: ec2-creation-in-us-east-1
         run: terraform apply -auto-approve
+
 
 
 
