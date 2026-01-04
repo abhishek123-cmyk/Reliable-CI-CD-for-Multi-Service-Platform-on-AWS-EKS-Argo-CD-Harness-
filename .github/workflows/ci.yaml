@@ -1,0 +1,11 @@
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker
+      - name: Login to ECR
+      - name: Build Docker image
+      - name: Scan image with Trivy
+      - name: Sign image with cosign
+      - name: Push to ECR
