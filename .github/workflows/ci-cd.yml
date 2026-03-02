@@ -1,0 +1,51 @@
+name: CI/CD to EKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: eu-central-1
+  EKS_CLUSTER: frankfurt-eks-cluster
+  NAMESPACE: webapp
+  APP_NAME: webapp
+  ECR_REGISTRY: 123456789012.dkr.ecr.eu-central-1.amazonaws.com
+  IMAGE_TAG: latest
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build Docker Image
+      run: |
+        docker build -t ${{ env.APP_NAME }}:latest ./app
+        docker tag ${{ env.APP_NAME }}:latest ${{ env.ECR_REGISTRY }}/${{ env.APP_NAME }}:latest
+
+    - name: Push Docker Image to ECR
+      run: |
+        docker push ${{ env.ECR_REGISTRY }}/${{ env.APP_NAME }}:latest
+
+    - name: Update kubeconfig for EKS
+      run: |
+        aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER }}
+
+    - name: Deploy to EKS
+      run: |
+        kubectl set image deployment/${{ env.APP_NAME }} ${{ env.APP_NAME }}=${{ env.ECR_REGISTRY }}/${{ env.APP_NAME }}:latest -n ${{ env.NAMESPACE }}
+        kubectl rollout status deployment/${{ env.APP_NAME }} -n ${{ env.NAMESPACE }}
